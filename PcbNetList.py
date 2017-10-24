@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 
 def File_NetOut(f, netno, name, net, total) :
@@ -32,6 +33,7 @@ def Calay_Read(rfname, wfname = 'NET.TXT') :
     for line in open(rfname, 'r'):
         f.write(line)
         line = line.replace('\n', '')        #改行削除
+        line = line.replace('\r', '')        #改行削除
         #print(line)
         words = re.split(" +", line)         #１行をスペースで分離
         #print(words)
@@ -133,6 +135,7 @@ def CCF_Read(rfname, wfname = 'NET.TXT') :
     for line in open(rfname, 'r'):
         f.write(line)
         line = line.replace('\n', '')        #改行削除
+        line = line.replace('\r', '')        #改行削除
         #print(line)
 
         if n == 0 :                         #ネット名前を記憶
@@ -240,6 +243,7 @@ def DKS_Read(rfname, wfname = 'NET.TXT') :
     for line in open(rfname, 'r'):
         f.write(line)
         line = line.replace('\n', '')       #改行削除
+        line = line.replace('\r', '')       #改行削除
         #print(line)
 
         if n == 0 :                        #ネット名前を記憶
@@ -354,6 +358,7 @@ def MM2_Read(rfname, wfname = 'NET.TXT') :
     for line in open(rfname, 'r'):
         f.write(line)
         line = line.replace('\n', '')       #改行削除
+        line = line.replace('\r', '')       #改行削除
         #print(line)
 
         if n == 0 :                        #ネット名前を記憶
@@ -469,6 +474,7 @@ def Telesis_Read(rfname, wfname = 'NET.TXT') :
     for line in open(rfname, 'r'):
         f.write(line)
         line = line.replace('\n', '')       #改行削除
+        line = line.replace('\r', '')       #改行削除
         #print(line)
 
         if n == 0 :                        #ネット名前を記憶
@@ -595,6 +601,7 @@ def PADS_Read(rfname, wfname = 'NET.TXT') :
     name = ''; n = 0; t = 0
     for line in open(rfname, 'r'):
         line = line.replace('\n', '')       #改行削除
+        line = line.replace('\r', '')       #改行削除
 
         words = re.split(" +", line.strip())  #１行をスペースで分離
         if line[0:4] == '*SIG' :           #最初の文字が'*SIG*'の時の処理
@@ -678,9 +685,19 @@ def PADS_Write(netlist, wfname = 'pads.net', rfname = '') :
     f = open(wfname, 'w')
 
     if rfname != '' :
-        import numpy as np
-        #data = np.loadtxt(rfname, delimiter=",", skiprows=1, dtype='str' )
-        data = np.loadtxt(rfname, delimiter=",", skiprows=1, dtype=[('Reference', 'S10'), ('Value', 'S20'), ('Footprint', 'S50')] )
+        import csv
+        #Reference, Value, Footprint
+      
+        data = []
+        with open(rfname, 'r') as fcsv:
+            reader = csv.reader(fcsv)       # readerオブジェクトを作成
+            header = next(reader)          # 最初の一行をヘッダーとして取得
+            #print(header)                  # ヘッダーを表示
+            if (header[0].strip() == 'Reference') and (header[2].strip() == 'Footprint') :
+                # 行ごとのリストを処理する
+                for row in reader:
+                    data.append(row)      # １行ずつデータ追加
+
         #print(data)
         
         f.write("*PART*       ITEMS\n")
@@ -752,6 +769,7 @@ def Intergra_Read(rfname, wfname = 'NET.TXT') :
     name = ''; n = 0; t = 0; lock = 0
     for line in open(rfname, 'r'):
         line = line.replace('\n', '')      #改行削除
+        line = line.replace('\r', '')       #改行削除
 
         if lock == 0 :                    #読み飛ばし処理
             if line[0:4] == '%NET' :
@@ -819,9 +837,19 @@ def Intergra_Write(netlist, wfname = 'intergra.net', rfname = '') :
 
     
     if rfname != '' :
-        import numpy as np
-        #data = np.loadtxt(rfname, delimiter=",", skiprows=1, dtype='str' )
-        data = np.loadtxt(rfname, delimiter=",", skiprows=1, dtype=[('Reference', 'S10'), ('Value', 'S20'), ('Footprint', 'S50')] )
+        import csv
+        #Reference, Value, Footprint
+     
+        data = []
+        with open(rfname, 'r') as fcsv:
+            reader = csv.reader(fcsv)       # readerオブジェクトを作成
+            header = next(reader)          # 最初の一行をヘッダーとして取得
+            #print(header)                  # ヘッダーを表示
+            if (header[0].strip() == 'Reference') and (header[2].strip() == 'Footprint') :
+                # 行ごとのリストを処理する
+                for row in reader:
+                    data.append(row)      # １行ずつデータ追加
+
         #print(data)
         
         f.write("%PART\n")
@@ -914,6 +942,7 @@ def Kicad_Read(rfname, wfname = 'NET.TXT') :
     name = ''; n = 0; t = 0; lock = 0
     for line in open(rfname, 'r'):
         line = line.replace('\n', '')      #改行削除
+        line = line.replace('\r', '')      #改行削除
         if lock != 0 :
             f.write(line);  f.write('\n')
 
@@ -971,14 +1000,22 @@ def Kicad_Write(netlist, wfname = 'kicad.net', rfname = '') :
     f.write("(export (version D)\n")
 
     if rfname != '' :
-        import numpy as np
+        import csv
         #Reference, Value, Footprint, Datasheet
         #"C1","C_Small","Capacitors_SMD:C_0603_HandSoldering",""
         #"R1","R_Small","Resistors_SMD:R_0603_HandSoldering",""
         #"L1","L_Small","Inductors_SMD:L_0603_HandSoldering",""
       
-        #data = np.loadtxt(rfname, delimiter=",", skiprows=1, dtype='str' )
-        data = np.loadtxt(rfname, delimiter=",", skiprows=1, dtype=[('Reference', 'S10'), ('Value', 'S20'), ('Footprint', 'S50')] )
+        data = []
+        with open(rfname, 'r') as fcsv:
+            reader = csv.reader(fcsv)       # readerオブジェクトを作成
+            header = next(reader)          # 最初の一行をヘッダーとして取得
+            #print(header)                  # ヘッダーを表示
+            if (header[0].strip() == 'Reference') and (header[1].strip() == 'Value') and (header[2].strip() == 'Footprint') :
+                # 行ごとのリストを処理する
+                for row in reader:
+                    data.append(row)      # １行ずつデータ追加
+
         #print(data)
 
         data_n = len(data); data_n -= 1
