@@ -13,6 +13,7 @@ def File_NetOut(f, netno, name, net, total) :
     f.write(str)
 
 
+
 #************************************************************************************************************************************************
 #/TEC      R015(2) C411(2) C308(1) T14(1);
 #/S5V      R328(2) C325(2) J3(22) C326(2) R325(2) R323(2) R011(1) C006(2),
@@ -37,25 +38,29 @@ def Calay_Read(rfname, wfname = 'NET.TXT') :
         #print(line)
         words = re.split(" +", line)         #１行をスペースで分離
         #print(words)
-        if n == 0 :                         #ネット名前を記憶
+        if n == 0 :                          #ネット名前を記憶
             name = words[0].strip()
 
         if len(words) > 0 :                  #ネットが存在する時        
             w = words[-1]
             if w == '' :
                 EOF = 1
-            elif w[-1] == ';' :             #最後の文字が';'の時
+            elif w[-1] == ';' :              #最後の文字が';'の時
                 words[-1] = w[:-1]           #';'削除の上、再登録
-                for w in words[1:] :        #ネットを記憶
-                    net.append(w.strip())
+                for w in words[1:] :         #ネットを記憶
+                    w = w.strip()
+                    if len(w) > 0 :
+                        net.append(w)
                 EOF = 1
                 #print(name)
                 #print(net)
                 #print()
             elif w[-1] == ',' :             #最後の文字が','の時
-                words[-1] = w[:-1]           #','削除の上、再登録
+                words[-1] = w[:-1]          #','削除の上、再登録
                 for w in words[1:] :        #ネットを記憶
-                    net.append(w.strip())
+                    w = w.strip()
+                    if len(w) > 0 :
+                        net.append(w)
                 EOF = 0
             else :
                 EOF = 1
@@ -65,7 +70,7 @@ def Calay_Read(rfname, wfname = 'NET.TXT') :
         
         if EOF == 1 :
             if name != '' and len(net) > 0 : 
-                net.sort()                   #ネットリストの並べ替え
+                net.sort()                  #ネットリストの並べ替え
                 netname.append(name)
                 netlist.append(net)
 
@@ -150,7 +155,7 @@ def CCF_Read(rfname, wfname = 'NET.TXT') :
         #print(words)           
 
         if len(words) > 0 :                 #ネットが存在する時
-            w = words[-1] 
+            w = words[-1].strip() 
             if w == '' :                    #最後が''の時
                 del words[-1]               #''削除
                 for w in words :            #ネットを記憶
@@ -159,7 +164,9 @@ def CCF_Read(rfname, wfname = 'NET.TXT') :
             elif w[-1] == ';' :             #最後の文字が';'の時
                 words[-1] = w[:-1]          #';'削除の上、再登録
                 for w in words :            #ネットを記憶
-                    net.append(w.strip())
+                    w = w.strip()
+                    if len(w) > 0 :
+                        net.append(w)
                 EOF = 1
                 #print(name)
                 #print(net)
@@ -258,18 +265,22 @@ def DKS_Read(rfname, wfname = 'NET.TXT') :
         #print(words)           
 
         if len(words) > 0 :                #ネットが存在する時
-            w = words[-1] 
+            w = words[-1].strip() 
             if w == '' :                   #最後が''の時
                 del words[-1]              #''削除
                 for w in words :           #ネットを記憶
-                    w = (w.strip()).replace('-', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()
+                    if len(w) > 0 :
+                	w = w.replace('-', '(', 1) + ')'                   
+                        net.append(w)
                 EOF = 0
             elif w[-1] == ']' :            #最後の文字が']'の時
                 words[-1] = w[:-1]          #']'削除の上、再登録
                 for w in words :           #ネットを記憶
-                    w = (w.strip()).replace('-', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()                   
+                    if len(w) > 0 :
+                	w = w.replace('-', '(', 1) + ')'                   
+                        net.append(w)
                 EOF = 1
                 #print(name)
                 #print(net)
@@ -381,13 +392,17 @@ def MM2_Read(rfname, wfname = 'NET.TXT') :
             if w == '' :                   #最後が','の時
                 del words[-1]              #''削除
                 for w in words :           #ネットを記憶
-                    w = (w.strip()).replace('-', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()                   
+                    if len(w) > 0 :
+                	w = w.replace('-', '(', 1) + ')'                   
+                        net.append(w)
                 EOF = 0
             else :
                 for w in words :           #ネットを記憶
-                    w = (w.strip()).replace('-', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()                   
+                    if len(w) > 0 :
+                	w = w.replace('-', '(', 1) + ')'                   
+                        net.append(w)
                 EOF = 1
                 #print(name)
                 #print(net)
@@ -470,12 +485,17 @@ def Telesis_Read(rfname, wfname = 'NET.TXT') :
     f = open(wfname, 'w')
 
     netname = []; netlist = []; net = []
-    name = ''; n = 0; t = 0
+    name = ''; n = 0; t = 0; lock = 0
     for line in open(rfname, 'r'):
         f.write(line)
         line = line.replace('\n', '')       #改行削除
         line = line.replace('\r', '')       #改行削除
         #print(line)
+
+        if lock == 0 :                    #読み飛ばし処理
+            if line[0:4] == '$NET' :
+                lock = 1
+            continue
 
         if n == 0 :                        #ネット名前を記憶
             words = line.split(';', 1)
@@ -495,8 +515,10 @@ def Telesis_Read(rfname, wfname = 'NET.TXT') :
             if w[-1] == ',' :              #最後の文字が','の時
                 words[-1] = w[:-1]         #','削除の上、再登録
                 for w in words :           #ネットを記憶
-                    w = (w.strip()).replace('.', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()
+                    if len(w) > 0 :
+                        w = w.replace('.', '(', 1) + ')'                   
+                        net.append(w)
                 EOF = 0
             else :
                 for w in words :           #ネットを記憶
@@ -526,7 +548,6 @@ def Telesis_Read(rfname, wfname = 'NET.TXT') :
 
     f.close()
     return (netname, netlist, rfname)
-
 
 #net = Telesis_Read('05_telesis.NET', 'NET.TXT')
 #print(net[0])            
@@ -625,8 +646,10 @@ def PADS_Read(rfname, wfname = 'NET.TXT') :
         elif len(words) > 0 :
             if name1 != '' and words[0] != '' :
                 for w in words :           #ネットを記憶
-                    w = (w.strip()).replace('.', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()                   
+                    if len(w) > 0 :
+                	w = w.replace('.', '(', 1) + ')'                   
+                        net.append(w)
                 EOF = 0
             else :
                 name = name1
@@ -781,8 +804,10 @@ def Intergra_Read(rfname, wfname = 'NET.TXT') :
         if len(words) > 1 :
             if words[0].strip() == '*' :  #前のネットの続き
                 for w in words[1:] :      #ネットを記憶
-                    w = (w.strip()).replace('-', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()                   
+                    if len(w) > 0 :
+                	w = w.replace('-', '(', 1) + ')'                   
+                        net.append(w)
             else :                        #新しいネット名前
                 if n > 0 and name != '' and len(net) > 0 : #前のネットを登録
                     net.sort()             #ネットリストの並べ替え
@@ -799,8 +824,10 @@ def Intergra_Read(rfname, wfname = 'NET.TXT') :
                 name = words[0].strip()    #新しいネット名前を記憶
                 net = []
                 for w in words[1:] :      #新しいネットを記憶
-                    w = (w.strip()).replace('-', '(', 1) + ')'                   
-                    net.append(w)
+                    w = w.strip()                   
+                    if len(w) > 0 :
+                	w = w.replace('-', '(', 1) + ')'                   
+                        net.append(w)
                     
                 n += 1
                 
@@ -899,6 +926,61 @@ def Intergra_Write(netlist, wfname = 'intergra.net', rfname = '') :
 #Intergra_Write(net, 'intergra.net')
 #Intergra_Write(net)
 
+
+
+#Cmp-Mod V01 Created by PcbNew   date = 2017年10月30日 21時24分46秒
+#
+#BeginCmp
+#TimeStamp = 59F71BA6
+#Path = /A400
+#Reference = BT1;
+#ValeurCmp = BT:2;
+#IdModule  = Pin_Headers:Pin_Header_Straight_1x02_Pitch2.54mm;
+#EndCmp
+def Cmp_Read(rfname) :
+
+    data = []
+    n = 0; lock = 0
+    for line in open(rfname, 'r'):
+        #print(line)
+        line = line.replace('\n', '')        #改行削除
+        line = line.replace('\r', '')        #改行削除
+        n += 1
+        if n == 1 :                        #ヘッダーチェック
+            if line[0:7] != 'Cmp-Mod' :
+                break
+            else :
+                continue
+    
+        if lock == 0 :                       #「BeginCmp」まで読み飛ばし処理
+            if line[0:8] == 'BeginCmp' :
+                Ref = ''; Val = ''; Fot = ''; Tim = ''; Pth = ''
+                lock = 1
+            continue
+        else :                               #「EndCmp」までの部品情報を記録
+            if line[0:12] == 'Reference = ' and line[-1] == ';' :
+                Ref = line[12:-1]
+                continue
+            elif line[0:12] == 'ValeurCmp = ' and line[-1] == ';' :
+                Val = line[12:-1]
+                continue
+            elif line[0:12] == 'IdModule  = ' and line[-1] == ';' :
+                Fot = line[12:-1]
+                continue
+            elif line[0:6] == 'EndCmp' :
+                data.append([Ref, Val, Fot, Tim, Pth])
+                lock = 0
+                continue
+            elif line[0:12] == 'TimeStamp = ' :
+                Tim = line[12:]
+                continue
+            elif line[0:7] == 'Path = ' :
+                Pth = line[7:]
+		if Pth[0] == '/' :
+		    Pth = Pth[1:]
+                continue
+                  
+    return data
 
 
 #************************************************************************************************************************************************
